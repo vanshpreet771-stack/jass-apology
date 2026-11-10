@@ -10,8 +10,45 @@
   <meta name="theme-color" content="#f6e9ff">
   <!-- Tiny heart favicon embedded as a data URI (no extra file to host) -->
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Ctext y=%27.9em%27 font-size=%2790%27%3E%F0%9F%92%97%3C/text%3E%3C/svg%3E">
-  <link rel="stylesheet" href="style.css">
-  <script src="script.js" defer></script>
+  <!-- Fonts: elegant serif for headings & letter, rounded sans for buttons. If the fonts can't load,
+       the stack in style.css falls back to good system fonts. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=Nunito:wght@600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,500&display=swap">
+
+  <!-- CRITICAL CSS (inlined on purpose).
+       If style.css is ever slow, cached in an old version, or fails to load on a phone, this small block
+       still keeps the page pink/lavender, hides the overlays, and keeps the lock icon small
+       instead of letting the page fall back to plain browser styling. -->
+  <style>
+    html,body{margin:0;height:100%;background:#f8eefc;color:#4b3a68;font-family:"Nunito",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+    body{overflow:hidden}
+    [hidden]{display:none!important}
+    .bg{position:fixed;top:0;right:0;bottom:0;left:0;background:linear-gradient(165deg,#ffe7f2,#f5ebff 48%,#ffeaf5);z-index:0}
+    .screen{position:fixed;top:0;right:0;bottom:0;left:0;z-index:2;display:flex;flex-direction:column;align-items:center;overflow-y:auto;opacity:0;visibility:hidden}
+    .screen.is-active{opacity:1;visibility:visible}
+    .unlocking{position:fixed;top:0;right:0;bottom:0;left:0;z-index:15;opacity:0;visibility:hidden;pointer-events:none}
+    .unlocking.show{opacity:1;visibility:visible;pointer-events:auto}
+    .lock-svg{width:104px;height:104px}
+    .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+    .fx,.burst-layer{position:fixed;top:0;right:0;bottom:0;left:0;pointer-events:none;overflow:hidden}
+    .burst-layer{z-index:40}
+    button{font-family:inherit}
+    /* fallback look for cards, headings, input and buttons */
+    .screen{padding:64px 16px 24px;box-sizing:border-box}
+    .screen-inner{margin:auto;width:100%;max-width:460px;text-align:center}
+    .card,.letter-card{background:rgba(255,255,255,.85);border-radius:24px;padding:24px 20px;box-shadow:0 12px 36px rgba(169,139,245,.25)}
+    .title{font-family:"Playfair Display",Georgia,serif;font-size:1.7rem;line-height:1.25;color:#9a4fb8;margin:.2em 0 .4em}
+    .field input{box-sizing:border-box;width:100%;padding:14px 18px;font-size:1rem;text-align:center;border:1.5px solid #d6c6f5;border-radius:999px;background:#fff;color:#4b3a68}
+    .btn,.choice{display:block;width:100%;box-sizing:border-box;margin-top:12px;padding:14px 20px;border:0;border-radius:999px;font-weight:700;font-size:1rem;color:#fff;background:linear-gradient(135deg,#ee6aa7,#8d68de)}
+    .choice{color:#553a9c;background:#f1e8ff}
+    .music-toggle{position:fixed;top:12px;right:12px;z-index:30;border:0;border-radius:999px;padding:10px 14px;background:#fff;color:#7556c4;font-weight:700}
+    .env-scene,.env-wrap{text-align:center}
+  </style>
+
+  <!-- ?v=2 makes phones download the newest files instead of an old cached copy -->
+  <link rel="stylesheet" href="style.css?v=2">
+  <script src="script.js?v=2" defer></script>
   <!-- If JavaScript is switched off, still show the first screen with a gentle note -->
   <noscript><style>.screen{opacity:1;visibility:visible;transform:none;pointer-events:auto}</style></noscript>
 </head>
@@ -144,7 +181,8 @@
   <!-- ============ Unlocking animation overlay ============ -->
   <div class="unlocking" id="unlocking" aria-live="polite">
     <div class="unlock-box">
-      <svg class="lock-svg" viewBox="0 0 120 120" aria-hidden="true" focusable="false">
+      <!-- width/height attributes keep the lock small even if CSS fails to load -->
+      <svg class="lock-svg" width="104" height="104" viewBox="0 0 120 120" aria-hidden="true" focusable="false">
         <defs>
           <linearGradient id="lockGrad" x1="0" y1="0" x2="1" y2="1">
             <stop offset="0" stop-color="#ff8fbd"/>
