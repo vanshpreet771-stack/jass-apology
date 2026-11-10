@@ -46,10 +46,10 @@
   --radius-lg: 20px;
 
   /* System fonts only: nothing to download, nothing to break offline */
-  --font-body:  ui-rounded, "SF Pro Rounded", "Nunito", "Quicksand", system-ui, -apple-system,
+  --font-body:  "Nunito", ui-rounded, "SF Pro Rounded", "Quicksand", system-ui, -apple-system,
                 "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia,
-                "Times New Roman", serif;
+  --font-serif: "Playfair Display", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, "Noto Serif", serif;
+  --font-letter: "Lora", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, "Noto Serif", serif;
 
   --ease: cubic-bezier(.22, .8, .24, 1);
 
@@ -107,7 +107,7 @@ h1, h2, p { margin: 0; }
 
 /* ---------- 4. BACKGROUND, FLOATING FX, BURSTS ---------- */
 .bg {
-  position: fixed; inset: 0; z-index: 0; overflow: hidden;
+  position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 0; overflow: hidden;
   background: linear-gradient(165deg, #ffe7f2 0%, #f5ebff 48%, #ffeaf5 100%);
 }
 .blob {
@@ -123,7 +123,7 @@ h1, h2, p { margin: 0; }
       background: radial-gradient(circle, rgba(255, 255, 255, .8), rgba(255, 255, 255, 0) 60%);
       animation-duration: 38s; animation-delay: -14s; }
 
-.fx { position: fixed; inset: 0; z-index: 1; overflow: hidden; pointer-events: none; }
+.fx { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 1; overflow: hidden; pointer-events: none; }
 .fx-item { position: absolute; opacity: 0; will-change: transform, opacity; }
 
 .fx-heart { bottom: -40px; left: var(--x); width: var(--size); height: var(--size);
@@ -142,7 +142,7 @@ h1, h2, p { margin: 0; }
 .fx-item.is-static { animation: none; bottom: auto; top: var(--y); opacity: var(--o, .4); }
 
 /* Click bursts and the final heart shower */
-.burst-layer { position: fixed; inset: 0; z-index: 40; pointer-events: none; overflow: hidden; }
+.burst-layer { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 40; pointer-events: none; overflow: hidden; }
 .burst-p { position: absolute; width: var(--s, 12px); height: var(--s, 12px);
            animation: burst .95s cubic-bezier(.2, .7, .3, 1) forwards; will-change: transform, opacity; }
 .burst-p.heart { background: linear-gradient(135deg, #ffb3d1, #ff7fb2); }
@@ -154,7 +154,7 @@ h1, h2, p { margin: 0; }
 
 /* ---------- 5. SCREENS & PAGE TRANSITIONS ---------- */
 .screen {
-  position: fixed; inset: 0; z-index: 2;
+  position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 2;
   display: flex; flex-direction: column; align-items: center;
   padding: calc(env(safe-area-inset-top) + 66px) calc(env(safe-area-inset-right) + 18px)
            calc(env(safe-area-inset-bottom) + 30px) calc(env(safe-area-inset-left) + 18px);
@@ -192,7 +192,7 @@ h1, h2, p { margin: 0; }
           backdrop-filter: blur(18px) saturate(1.3);
 }
 .card::before {                                  /* soft glass highlight */
-  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  content: ""; position: absolute; top: 0; right: 0; bottom: 0; left: 0; border-radius: inherit; pointer-events: none;
   background: linear-gradient(145deg, rgba(255, 255, 255, .65), rgba(255, 255, 255, 0) 42%);
 }
 .card > * { position: relative; }                /* keep content above the highlight */
@@ -205,10 +205,14 @@ h1, h2, p { margin: 0; }
   font-family: var(--font-serif); font-weight: 600;
   font-size: clamp(1.7rem, 7.2vw, 2.3rem); line-height: 1.22;
   margin: .1em 0 .4em;
-  color: var(--purple-600);                      /* fallback */
-  background: linear-gradient(135deg, #d2569a, #7a55cc);
-  -webkit-background-clip: text; background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: #9a4fb8;                                /* solid fallback */
+}
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .title {
+    background: linear-gradient(135deg, #d2569a, #7a55cc);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
 }
 .title .emoji { -webkit-text-fill-color: initial; color: #e75d9d; }
 
@@ -282,7 +286,7 @@ h1, h2, p { margin: 0; }
 .field input:focus { background: #fff; border-color: var(--purple-400); box-shadow: 0 0 0 5px rgba(169, 139, 245, .22); }
 
 .unlock-form .btn { margin-top: 14px; }
-#unlock-card { padding-bottom: 16px; }
+#unlock-card { padding-bottom: 22px; }
 
 .hint-msg {
   min-height: 3em; margin-top: 12px; font-size: 1rem; line-height: 1.5; font-weight: 600; color: #b0447f;
@@ -290,13 +294,14 @@ h1, h2, p { margin: 0; }
   transition: opacity .35s ease, transform .35s var(--ease);
 }
 .hint-msg.show { opacity: 1; transform: none; }
+.hint-msg:not(.show) { min-height: 0; height: 0; margin-top: 0; overflow: hidden; }   /* no dead space until a message appears */
 
 .card.shake { animation: shake .5s cubic-bezier(.36, .07, .19, .97); }
 
 
 /* ---------- 8. UNLOCKING OVERLAY ---------- */
 .unlocking {
-  position: fixed; inset: 0; z-index: 15; display: grid; place-items: center;
+  position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 15; display: grid; place-items: center;
   background: rgba(250, 240, 255, .74);
   -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
   opacity: 0; visibility: hidden; pointer-events: none;
@@ -305,7 +310,7 @@ h1, h2, p { margin: 0; }
 .unlocking.show { opacity: 1; visibility: visible; pointer-events: auto; transition: opacity .4s ease, visibility 0s; }
 
 .unlock-box { text-align: center; padding: 20px; }
-.lock-svg { width: 140px; height: 140px; overflow: visible; filter: drop-shadow(0 12px 22px rgba(169, 139, 245, .35)); }
+.lock-svg { width: 120px; height: 120px; overflow: visible; filter: drop-shadow(0 12px 22px rgba(169, 139, 245, .35)); }
 .lock-ring { stroke-dasharray: 289; stroke-dashoffset: 289; transition: stroke-dashoffset 1.6s cubic-bezier(.5, .1, .3, 1); }
 .unlocking.progress .lock-ring { stroke-dashoffset: 0; }
 .lock-shackle { transform-box: fill-box; transform-origin: 0% 100%; transition: transform .6s var(--ease); }
@@ -319,11 +324,12 @@ h1, h2, p { margin: 0; }
              font-size: clamp(1.3rem, 5.5vw, 1.7rem); color: var(--purple-600); margin-bottom: 4px; }
 
 /* Top padding leaves room for the letter to rise out without touching the heading */
-.env-wrap { padding-top: clamp(112px, 38vw, 152px); animation: bob 4.5s ease-in-out infinite; }
+.env-wrap { padding-top: clamp(132px, 40vw, 160px); animation: bob 4.5s ease-in-out infinite; }
 .env-scene.opened .env-wrap { animation-play-state: paused; }
 
 .envelope {
-  --w: min(80vw, 340px);
+  --w: 300px;                                  /* fallback for old browsers */
+  --w: min(78vw, 320px);
   position: relative; display: block; width: var(--w); height: calc(var(--w) * .68);
   padding: 0; border: 0; background: none; cursor: pointer;
   perspective: 900px; -webkit-tap-highlight-color: transparent;
@@ -332,7 +338,7 @@ h1, h2, p { margin: 0; }
 .envelope.open { cursor: default; }
 
 .env-back {
-  position: absolute; inset: 0; border-radius: 12px;
+  position: absolute; top: 0; right: 0; bottom: 0; left: 0; border-radius: 12px;
   background: linear-gradient(160deg, #ffd9e8, #e6d9ff);
   box-shadow: 0 24px 44px rgba(169, 139, 245, .32), 0 6px 16px rgba(255, 148, 191, .28);
 }
@@ -353,8 +359,8 @@ h1, h2, p { margin: 0; }
 .envelope.open .env-paper { transform: translateY(-64%); }
 
 /* Front pocket — three folded triangles */
-.env-front { position: absolute; inset: 0; z-index: 3; border-radius: 12px; overflow: hidden; }
-.fold { position: absolute; inset: 0; }
+.env-front { position: absolute; top: 0; right: 0; bottom: 0; left: 0; z-index: 3; border-radius: 12px; overflow: hidden; }
+.fold { position: absolute; top: 0; right: 0; bottom: 0; left: 0; }
 .fold-l { background: linear-gradient(90deg,  #f1e3ff, #fbe9f5); clip-path: polygon(0 0, 50% 54%, 0 100%); }
 .fold-r { background: linear-gradient(270deg, #f1e3ff, #fbe9f5); clip-path: polygon(100% 0, 50% 54%, 100% 100%); }
 .fold-b { background: linear-gradient(0deg,   #ffdcea, #ffeff6); clip-path: polygon(0 100%, 50% 54%, 100% 100%); }
@@ -372,7 +378,7 @@ h1, h2, p { margin: 0; }
 
 /* Heart seal */
 .env-seal {
-  position: absolute; left: 50%; top: 54%; z-index: 5; width: 15%; aspect-ratio: 1;
+  position: absolute; left: 50%; top: 54%; z-index: 5; width: 15%; height: 22%; min-width: 34px;
   transform: translate(-50%, -50%); border-radius: 50%;
   display: grid; place-items: center;
   background: radial-gradient(circle at 35% 30%, #ff9cc7, #d9558f);
@@ -405,7 +411,7 @@ h1, h2, p { margin: 0; }
 
 .letter { position: relative; z-index: 1; }
 .letter p {
-  font-family: var(--font-serif); font-size: clamp(1.05rem, 4.2vw, 1.22rem); line-height: 1.8;
+  font-family: var(--font-letter); font-size: clamp(1rem, 4.1vw, 1.15rem); line-height: 1.72;
   color: var(--ink); margin: 0 0 1.15em;
   opacity: 0; transform: translateY(12px);
   transition: opacity .9s ease, transform .9s var(--ease);
@@ -446,7 +452,7 @@ h1, h2, p { margin: 0; }
   background: var(--glass); border: 1px solid var(--glass-border);
   box-shadow: 0 10px 30px rgba(169, 139, 245, .2);
 }
-.reply p { font-family: var(--font-serif); font-size: clamp(1.12rem, 4.6vw, 1.35rem); line-height: 1.6; color: var(--ink); animation: fadeUp .8s var(--ease) both; }
+.reply p { font-family: var(--font-letter); font-size: clamp(1.12rem, 4.6vw, 1.35rem); line-height: 1.6; color: var(--ink); animation: fadeUp .8s var(--ease) both; }
 .continue { margin-top: 18px; width: 100%; max-width: 360px; animation: fadeUp .8s var(--ease) .25s both; }
 
 
@@ -495,6 +501,51 @@ h1, h2, p { margin: 0; }
 @media (max-width: 340px) {
   .music-label { display: none; }
   .music-toggle { padding: 0 14px; }
+}
+
+
+
+/* ---------- 13b. PHONE TUNING (Android & iPhone) ---------- */
+@media (max-width: 520px) {
+  .screen { padding: calc(env(safe-area-inset-top) + 64px) 16px calc(env(safe-area-inset-bottom) + 24px); }
+  .card { padding: 26px 20px 24px; border-radius: 26px; }
+  .badge { width: 68px; height: 68px; margin-bottom: 12px; }
+  .badge .ico-heart { width: 32px; height: 32px; }
+  .title { font-size: 1.7rem; margin-bottom: .35em; }
+  .subtitle { font-size: 1.02rem; margin-bottom: 1.1rem; }
+  .lead { font-size: 1.02rem; line-height: 1.65; margin: .4rem 0 1.4rem; }
+  .btn { min-height: 52px; padding: 13px 22px; font-size: 1.02rem; }
+  .field input { padding: 14px 18px; font-size: 1rem; }
+
+  /* lock animation: compact, not full-screen */
+  .lock-svg { width: 92px; height: 92px; }
+  .unlock-label { font-size: 1.1rem; margin-top: 10px; }
+
+  /* envelope: smaller, always on screen */
+  .env-title { font-size: 1.25rem; }
+  .env-wrap { padding-top: 132px; }
+  .envelope { --w: min(74vw, 290px); }
+  .tap-hint { margin-top: 22px; font-size: .95rem; }
+
+  /* letter: compact and comfortable */
+  .letter-card { padding: 30px 22px 26px; border-radius: 20px; border: 1.5px solid rgba(169, 139, 245, .28); }
+  .letter p { font-size: 1rem; line-height: 1.7; margin-bottom: .95em; }
+  .letter p.greeting { font-size: 1.3rem; }
+  .letter p.sign { font-size: 1.2rem; }
+  .ask { margin-top: 22px; }
+  .ask-title { font-size: 1.15rem; margin-bottom: 14px; }
+  .choice { min-height: 54px; padding: 12px 18px; font-size: 1rem; border-radius: 16px; }
+  .reply:not(:empty) { padding: 16px 18px; }
+  .reply p { font-size: 1.08rem; }
+
+  /* final */
+  .heart-glow.big .ico-heart { width: 72px; height: 72px; }
+  .final-title { font-size: 1.5rem; }
+}
+
+/* Android Chrome's address bar changes the visible height: use the dynamic viewport where supported */
+@supports (height: 100dvh) {
+  .screen, .bg, .fx, .unlocking { height: 100dvh; bottom: auto; }
 }
 
 
