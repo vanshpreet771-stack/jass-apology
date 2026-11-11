@@ -3,7 +3,7 @@
    ---------------------------------------------------------------------
    1.  Design tokens (colours, fonts, shadows)
    2.  Base & utilities
-   3.  Decorative shapes (heart / sparkle masks)
+   3.  Decorative shapes (hearts / sparkles)
    4.  Background, floating hearts & sparkles, click bursts
    5.  Screens & page transitions
    6.  Glass card, typography, buttons
@@ -13,7 +13,7 @@
    10. Screen 4 — letter & response choices
    11. Screen 5 — final screen
    12. Music toggle
-   13. Small-screen tweaks
+   13. Small-screen tweaks, performance mode, pausing hidden animations
    14. Reduced-motion support
    ===================================================================== */
 
@@ -56,6 +56,19 @@
   /* Shapes used as CSS masks (inline SVG, no image files needed) */
   --m-heart: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z'/%3E%3C/svg%3E");
   --m-spark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 0C12.8 7.5 16.5 11.2 24 12 16.5 12.8 12.8 16.5 12 24 11.2 16.5 7.5 12.8 0 12 7.5 11.2 11.2 7.5 12 0Z'/%3E%3C/svg%3E");
+
+  /* Pre-coloured shapes for the floating hearts/sparkles. Plain background images are much cheaper
+     for a phone to move around than masked gradients. */
+  --i-h1: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23ffc2dc'/%3E%3Cstop offset='1' stop-color='%23ff8fbd'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath fill='url(%23g)' d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z'/%3E%3C/svg%3E");
+  --i-h2: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23e6d6ff'/%3E%3Cstop offset='1' stop-color='%23b99cff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath fill='url(%23g)' d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z'/%3E%3C/svg%3E");
+  --i-h3: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23ffffff'/%3E%3Cstop offset='1' stop-color='%23ffc9de'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath fill='url(%23g)' d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z'/%3E%3C/svg%3E");
+  --i-hb: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23ffb3d1'/%3E%3Cstop offset='1' stop-color='%23ff7fb2'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath fill='url(%23g)' d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z'/%3E%3C/svg%3E");
+  --i-hr: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23ffb3d1'/%3E%3Cstop offset='1' stop-color='%23c9a8ff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath fill='url(%23g)' d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z'/%3E%3C/svg%3E");
+  --i-s0: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23ffd86b'/%3E%3Cstop offset='1' stop-color='%23ff9cc7'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath fill='url(%23g)' d='M12 0C12.8 7.5 16.5 11.2 24 12 16.5 12.8 12.8 16.5 12 24 11.2 16.5 7.5 12.8 0 12 7.5 11.2 11.2 7.5 12 0Z'/%3E%3C/svg%3E");
+  --i-s1: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23ffffff'/%3E%3Cstop offset='1' stop-color='%23ff9cc7'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath fill='url(%23g)' d='M12 0C12.8 7.5 16.5 11.2 24 12 16.5 12.8 12.8 16.5 12 24 11.2 16.5 7.5 12.8 0 12 7.5 11.2 11.2 7.5 12 0Z'/%3E%3C/svg%3E");
+  --i-s2: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23ffffff'/%3E%3Cstop offset='1' stop-color='%23b99cff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath fill='url(%23g)' d='M12 0C12.8 7.5 16.5 11.2 24 12 16.5 12.8 12.8 16.5 12 24 11.2 16.5 7.5 12.8 0 12 7.5 11.2 11.2 7.5 12 0Z'/%3E%3C/svg%3E");
+  --i-s3: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23fff3b8'/%3E%3Cstop offset='1' stop-color='%23ffc2dc'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath fill='url(%23g)' d='M12 0C12.8 7.5 16.5 11.2 24 12 16.5 12.8 12.8 16.5 12 24 11.2 16.5 7.5 12.8 0 12 7.5 11.2 11.2 7.5 12 0Z'/%3E%3C/svg%3E");
+  --i-sb: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23fff3b8'/%3E%3Cstop offset='1' stop-color='%23ffb3d1'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath fill='url(%23g)' d='M12 0C12.8 7.5 16.5 11.2 24 12 16.5 12.8 12.8 16.5 12 24 11.2 16.5 7.5 12.8 0 12 7.5 11.2 11.2 7.5 12 0Z'/%3E%3C/svg%3E");
 }
 
 
@@ -87,22 +100,24 @@ h1, h2, p { margin: 0; }
 
 
 /* ---------- 3. DECORATIVE SHAPES ---------- */
-.ico-heart, .fx-heart, .burst-p.heart, .rain-p {
+/* Static icons keep the mask (there are only a few and they hardly move) */
+.ico-heart {
+  display: inline-block; width: 34px; height: 34px; background: var(--grad-main);
   -webkit-mask: var(--m-heart) center / contain no-repeat;
           mask: var(--m-heart) center / contain no-repeat;
 }
-.ico-spark, .fx-spark, .burst-p.spark {
-  -webkit-mask: var(--m-spark) center / contain no-repeat;
-          mask: var(--m-spark) center / contain no-repeat;
-}
-
-.ico-heart { display: inline-block; width: 34px; height: 34px; background: var(--grad-main); }
-.ico-spark { display: inline-block; width: 16px; height: 16px; background: linear-gradient(135deg, #ffd86b, #ff9cc7);
+.ico-spark { display: inline-block; width: 16px; height: 16px; background: var(--i-s0) center / contain no-repeat;
              animation: twinkle 2.6s ease-in-out infinite; animation-delay: var(--d, 0s); }
 .ico-spark.big { width: 24px; height: 24px; }
 
-.heart-glow { display: inline-block; filter: drop-shadow(0 8px 14px rgba(238, 106, 167, .4)); }
-.beat { animation: heartbeat 2.2s ease-in-out infinite; transform-origin: center; }
+/* Heart with a soft pink glow. The glow is a plain gradient behind it (no live blur filter),
+   and the heartbeat scales the whole thing, so the browser only has to move one cached layer. */
+.heart-glow { position: relative; display: inline-block; animation: heartbeat 2.2s ease-in-out infinite; }
+.heart-glow::before {
+  content: ""; position: absolute; left: -35%; right: -35%; top: -15%; bottom: -45%; pointer-events: none;
+  background: radial-gradient(ellipse at 50% 56%, rgba(238, 106, 167, .38), rgba(238, 106, 167, 0) 62%);
+}
+.heart-glow > .ico-heart { position: relative; }
 
 
 /* ---------- 4. BACKGROUND, FLOATING FX, BURSTS ---------- */
@@ -113,7 +128,6 @@ h1, h2, p { margin: 0; }
 .blob {
   position: absolute; border-radius: 50%;
   width: 70vmax; height: 70vmax;
-  will-change: transform;
   animation: drift 26s ease-in-out infinite alternate;
 }
 .b1 { top: -25vmax; left: -20vmax;  background: radial-gradient(circle, rgba(255, 176, 210, .65), rgba(255, 176, 210, 0) 65%); }
@@ -124,19 +138,19 @@ h1, h2, p { margin: 0; }
       animation-duration: 38s; animation-delay: -14s; }
 
 .fx { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 1; overflow: hidden; pointer-events: none; }
-.fx-item { position: absolute; opacity: 0; will-change: transform, opacity; }
+.fx-item { position: absolute; opacity: 0; }
 
 .fx-heart { bottom: -40px; left: var(--x); width: var(--size); height: var(--size);
             animation: floatUp var(--dur) linear var(--delay) infinite; }
-.fx-heart.c1 { background: linear-gradient(135deg, #ffc2dc, #ff8fbd); }
-.fx-heart.c2 { background: linear-gradient(135deg, #e6d6ff, #b99cff); }
-.fx-heart.c3 { background: linear-gradient(135deg, #ffffff, #ffc9de); }
+.fx-heart.c1 { background: var(--i-h1) center / contain no-repeat; }
+.fx-heart.c2 { background: var(--i-h2) center / contain no-repeat; }
+.fx-heart.c3 { background: var(--i-h3) center / contain no-repeat; }
 
 .fx-spark { left: var(--x); top: var(--y); width: var(--size); height: var(--size);
             animation: twinkle var(--dur) ease-in-out var(--delay) infinite; }
-.fx-spark.c1 { background: linear-gradient(135deg, #ffffff, #ff9cc7); }
-.fx-spark.c2 { background: linear-gradient(135deg, #ffffff, #b99cff); }
-.fx-spark.c3 { background: linear-gradient(135deg, #fff3b8, #ffc2dc); }
+.fx-spark.c1 { background: var(--i-s1) center / contain no-repeat; }
+.fx-spark.c2 { background: var(--i-s2) center / contain no-repeat; }
+.fx-spark.c3 { background: var(--i-s3) center / contain no-repeat; }
 
 /* Used instead of animation when the visitor prefers reduced motion */
 .fx-item.is-static { animation: none; bottom: auto; top: var(--y); opacity: var(--o, .4); }
@@ -144,12 +158,12 @@ h1, h2, p { margin: 0; }
 /* Click bursts and the final heart shower */
 .burst-layer { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 40; pointer-events: none; overflow: hidden; }
 .burst-p { position: absolute; width: var(--s, 12px); height: var(--s, 12px);
-           animation: burst .95s cubic-bezier(.2, .7, .3, 1) forwards; will-change: transform, opacity; }
-.burst-p.heart { background: linear-gradient(135deg, #ffb3d1, #ff7fb2); }
-.burst-p.spark { background: linear-gradient(135deg, #fff3b8, #ffb3d1); }
+           animation: burst .95s cubic-bezier(.2, .7, .3, 1) forwards; }
+.burst-p.heart { background: var(--i-hb) center / contain no-repeat; }
+.burst-p.spark { background: var(--i-sb) center / contain no-repeat; }
 .rain-p { position: absolute; bottom: -40px; left: var(--x); width: var(--s, 18px); height: var(--s, 18px);
-          background: linear-gradient(135deg, #ffb3d1, #c9a8ff);
-          animation: rain var(--dur) ease-out forwards; will-change: transform, opacity; }
+          background: var(--i-hr) center / contain no-repeat;
+          animation: rain var(--dur) ease-out forwards; }
 
 
 /* ---------- 5. SCREENS & PAGE TRANSITIONS ---------- */
@@ -227,27 +241,28 @@ h1, h2, p { margin: 0; }
   min-height: 54px; padding: 14px 28px;
   border: 0; border-radius: 999px;
   font: 700 1.08rem/1.2 var(--font-body); letter-spacing: .2px; color: #fff;
-  background: var(--grad-main);
+  /* shimmer = a light streak painted as a background layer that slides across on hover */
+  background: linear-gradient(100deg, rgba(255, 255, 255, 0) 35%, rgba(255, 255, 255, .5) 50%, rgba(255, 255, 255, 0) 65%) -120% 0 / 60% 100% no-repeat,
+              var(--grad-main);
   text-shadow: 0 1px 2px rgba(90, 40, 120, .25);
   box-shadow: 0 10px 24px rgba(141, 104, 222, .35), inset 0 1px 0 rgba(255, 255, 255, .4);
-  cursor: pointer; overflow: hidden;
-  transition: transform .25s var(--ease), box-shadow .25s var(--ease), filter .25s ease;
+  cursor: pointer;
+  transition: transform .25s var(--ease), box-shadow .25s var(--ease), background-position .7s var(--ease);
   touch-action: manipulation;
 }
-.btn::after {                                    /* shimmer sweep on hover */
-  content: ""; position: absolute; top: 0; left: -60%; width: 40%; height: 100%;
-  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .55), transparent);
-  transform: skewX(-20deg); transition: left .7s var(--ease); pointer-events: none;
-}
-.btn:hover { transform: translateY(-2px); box-shadow: 0 16px 30px rgba(141, 104, 222, .42), inset 0 1px 0 rgba(255, 255, 255, .45); }
-.btn:hover::after { left: 130%; }
-.btn:active { transform: translateY(0) scale(.97); }
+.btn:hover { transform: translateY(-2px); box-shadow: 0 16px 30px rgba(141, 104, 222, .42), inset 0 1px 0 rgba(255, 255, 255, .45);
+             background-position: 220% 0, 0 0; }
+.btn:active { transform: translateY(0) scale(.97); transition-duration: .08s; }   /* instant tap feedback */
 .btn:focus-visible { outline: 3px solid rgba(142, 111, 224, .6); outline-offset: 3px; }
 .btn[disabled] { opacity: .65; cursor: default; }
 
 .card .btn { width: 100%; max-width: 360px; }
 
-.btn-pulse { animation: pulseGlow 2.6s ease-in-out infinite; }
+.btn-pulse::before {                             /* soft ring that expands and fades: only transform + opacity animate */
+  content: ""; position: absolute; top: 0; right: 0; bottom: 0; left: 0; border-radius: inherit; pointer-events: none;
+  box-shadow: 0 0 0 6px rgba(238, 106, 167, .34); opacity: 0;
+  animation: ringPulse 2.6s ease-out infinite;
+}
 
 .btn-ghost {
   color: var(--purple-600); text-shadow: none;
@@ -257,8 +272,7 @@ h1, h2, p { margin: 0; }
 }
 
 @media (hover: none) {                           /* avoid "stuck" hover on touch screens */
-  .btn:hover { transform: none; }
-  .btn:hover::after { left: -60%; }
+  .btn:hover { transform: none; background-position: -120% 0, 0 0; }
 }
 
 
@@ -310,7 +324,7 @@ h1, h2, p { margin: 0; }
 .unlocking.show { opacity: 1; visibility: visible; pointer-events: auto; transition: opacity .4s ease, visibility 0s; }
 
 .unlock-box { text-align: center; padding: 20px; }
-.lock-svg { width: 120px; height: 120px; overflow: visible; filter: drop-shadow(0 12px 22px rgba(169, 139, 245, .35)); }
+.lock-svg { width: 120px; height: 120px; overflow: visible; }
 .lock-ring { stroke-dasharray: 289; stroke-dashoffset: 289; transition: stroke-dashoffset 1.6s cubic-bezier(.5, .1, .3, 1); }
 .unlocking.progress .lock-ring { stroke-dashoffset: 0; }
 .lock-shackle { transform-box: fill-box; transform-origin: 0% 100%; transition: transform .6s var(--ease); }
@@ -332,7 +346,7 @@ h1, h2, p { margin: 0; }
   --w: min(78vw, 320px);
   position: relative; display: block; width: var(--w); height: calc(var(--w) * .68);
   padding: 0; border: 0; background: none; cursor: pointer;
-  perspective: 900px; -webkit-tap-highlight-color: transparent;
+  perspective: 900px; -webkit-tap-highlight-color: transparent; touch-action: manipulation;
 }
 .envelope:focus-visible { outline: 3px solid rgba(142, 111, 224, .6); outline-offset: 10px; border-radius: 14px; }
 .envelope.open { cursor: default; }
@@ -439,7 +453,7 @@ h1, h2, p { margin: 0; }
 .choice-time  { background: linear-gradient(135deg, #f1e8ff, #dccbff); color: #553a9c; }
 .choice-later { background: linear-gradient(135deg, #ffffff, #f3ecff 60%, #ffe9f3); color: #6a4f9c; }
 .choice:hover { transform: translateY(-2px); box-shadow: 0 14px 28px rgba(169, 139, 245, .3), inset 0 1px 0 #fff; }
-.choice:active { transform: scale(.98); }
+.choice:active { transform: scale(.98); transition-duration: .08s; }
 .choice:focus-visible { outline: 3px solid rgba(142, 111, 224, .65); outline-offset: 3px; }
 .choice[aria-pressed="true"] { transform: translateY(-1px); box-shadow: 0 0 0 3px rgba(142, 111, 224, .65), 0 14px 28px rgba(169, 139, 245, .3); }
 .choices.has-choice .choice[aria-pressed="false"] { opacity: .7; }
@@ -543,10 +557,24 @@ h1, h2, p { margin: 0; }
   .final-title { font-size: 1.5rem; }
 }
 
-/* Android Chrome's address bar changes the visible height: use the dynamic viewport where supported */
-@supports (height: 100dvh) {
-  .screen, .bg, .fx, .unlocking { height: 100dvh; bottom: auto; }
+/* ---------- 13c. PERFORMANCE MODE (phones, tablets, any touch screen) ----------
+   Same look, lighter to draw: no live blur behind cards, simpler shadows, still background. */
+@media (max-width: 820px), (pointer: coarse) {
+  :root { --shadow-soft: 0 10px 28px rgba(169, 139, 245, .24); }
+  .card { background: rgba(255, 255, 255, .78); -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .music-toggle { -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .unlocking { background: rgba(250, 240, 255, .93); -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .blob { animation: none; }
+  .env-back { box-shadow: 0 16px 30px rgba(169, 139, 245, .3); }
 }
+
+/* ---------- 13d. PAUSE DECORATIONS NOBODY CAN SEE ----------
+   Animations on a hidden screen, on a hidden browser tab, or under the unlocking overlay stop completely. */
+.screen:not(.is-active) *, .screen:not(.is-active) *::before, .screen:not(.is-active) *::after { animation-play-state: paused !important; }
+.fx-paused .fx-item, .fx-paused .blob { animation-play-state: paused; }
+
+/* Contain the decorative layers so they never trigger layout of the rest of the page */
+.bg, .fx, .burst-layer { contain: layout paint style; }
 
 
 /* ---------- KEYFRAMES ---------- */
@@ -556,8 +584,7 @@ h1, h2, p { margin: 0; }
                        100% { transform: translate3d(var(--drift, 20px), -115vh, 0) rotate(var(--rot, 20deg)) scale(1); opacity: 0; } }
 @keyframes twinkle   { 0%, 100% { opacity: .15; transform: scale(.6) rotate(0deg); } 50% { opacity: .95; transform: scale(1.1) rotate(25deg); } }
 @keyframes heartbeat { 0%, 100% { transform: scale(1); } 14% { transform: scale(1.14); } 28% { transform: scale(1); } 42% { transform: scale(1.08); } 70% { transform: scale(1); } }
-@keyframes pulseGlow { 0%, 100% { box-shadow: 0 10px 24px rgba(141, 104, 222, .35), 0 0 0 0 rgba(238, 106, 167, .38), inset 0 1px 0 rgba(255, 255, 255, .4); }
-                       50%      { box-shadow: 0 12px 30px rgba(141, 104, 222, .45), 0 0 0 12px rgba(238, 106, 167, 0), inset 0 1px 0 rgba(255, 255, 255, .4); } }
+@keyframes ringPulse { 0% { opacity: .8; transform: scale(1); } 70%, 100% { opacity: 0; transform: scale(1.06, 1.3); } }
 @keyframes shake     { 10%, 90% { transform: translateX(-2px); } 20%, 80% { transform: translateX(5px); } 30%, 50%, 70% { transform: translateX(-8px); } 40%, 60% { transform: translateX(8px); } }
 @keyframes bob       { 0%, 100% { transform: translateY(0) rotate(-1deg); } 50% { transform: translateY(-9px) rotate(1deg); } }
 @keyframes nudge     { 0%, 100% { transform: translateY(0); opacity: .75; } 50% { transform: translateY(5px); opacity: 1; } }
@@ -583,6 +610,6 @@ h1, h2, p { margin: 0; }
     transition-delay: 0s !important;
     scroll-behavior: auto !important;
   }
-  .blob, .fx-item, .btn-pulse, .beat, .tap-hint, .env-wrap, .ico-spark { animation: none !important; }
+  .blob, .fx-item, .btn-pulse::before, .heart-glow, .tap-hint, .env-wrap, .ico-spark { animation: none !important; }
   .screen { transform: none; }
 }
