@@ -3,13 +3,21 @@
    ---------------------------------------------------------------------
    1.  Settings you can edit (name, letter, replies)
    2.  Small helpers
-   3.  Floating hearts & sparkles, click bursts
+   3.  Floating hearts & sparkles, click bursts   (kept deliberately light)
    4.  Screen-to-screen transitions
    5.  Screen 1: name check + unlocking animation
    6.  Screen 2–3: welcome + envelope
    7.  Screen 4: letter + response choices
    8.  Screen 5: final screen
-   9.  Gentle music (Web Audio API, OFF until the visitor taps the toggle)
+   9.  Pausing decorations when nobody can see them
+   10. Gentle music (Web Audio API, OFF until the visitor taps the toggle)
+
+   Performance notes
+   - Every animation is CSS (transform / opacity only). JavaScript never animates per frame.
+   - Few decorative elements; fewer still on phones.
+   - Events are delegated or attached once; one-shot buttons remove their own listener.
+   - Nothing runs in the background: hidden tab, hidden screen and the unlocking overlay
+     all pause the decorations, and the music timer stops with the tab.
    ===================================================================== */
 (() => {
   'use strict';
@@ -49,10 +57,16 @@
   const $  = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
   const rand = (min, max) => min + Math.random() * (max - min);
+  const fix = (n, d = 0) => n.toFixed(d);
   const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+  // Resolves after the browser has painted the current state (replaces forced reflows)
+  const nextFrame = () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 
+  const root = document.documentElement;
   const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const liteQuery   = window.matchMedia('(max-width: 820px), (pointer: coarse)');   // phones, tablets, touch screens
   const reduced = () => motionQuery.matches;
+  const lite    = () => liteQuery.matches;
   // Shorten waits when the visitor prefers reduced motion
   const t = (ms) => (reduced() ? Math.min(ms, 150) : ms);
 
@@ -64,62 +78,68 @@
   /* ------------------------------------------------------------------
      3. FLOATING HEARTS, SPARKLES, BURSTS
      ------------------------------------------------------------------ */
+  const fxLayer    = $('#fx');
+  const burstLayer = $('#burst');
+
+  // Few elements on purpose: this is plenty to look magical and keeps phones smooth.
   function buildAmbient() {
-    const fx = $('#fx');
-    if (!fx) return;
-    const small = window.innerWidth < 600;
-    const heartCount = small ? 12 : 20;
-    const sparkCount = small ? 14 : 26;
+    if (!fxLayer) return;
+    $$('.fx-item', fxLayer).forEach((el) => el.remove());          // safe to call again (e.g. reduced-motion toggled)
+
+    const small = lite();
+    const hearts = small ? 6 : 10;
+    const sparks = small ? 7 : 14;
     const still = reduced();
+    const frag = document.createDocumentFragment();
 
-    for (let i = 0; i < heartCount; i++) {
+    for (let i = 0; i < hearts; i++) {
+      const dur = rand(14, 26);
       const el = document.createElement('span');
-      const dur = rand(13, 26);
-      el.className = 'fx-item fx-heart c' + (1 + (i % 3));
-      el.style.setProperty('--x', rand(0, 96).toFixed(1) + '%');
-      el.style.setProperty('--size', rand(12, 30).toFixed(0) + 'px');
-      el.style.setProperty('--dur', dur.toFixed(1) + 's');
-      el.style.setProperty('--delay', (-rand(0, dur)).toFixed(1) + 's');   // negative = already mid-flight
-      el.style.setProperty('--drift', rand(-50, 70).toFixed(0) + 'px');
-      el.style.setProperty('--rot', rand(-35, 35).toFixed(0) + 'deg');
-      el.style.setProperty('--o', rand(.4, .8).toFixed(2));
-      if (still) { el.classList.add('is-static'); el.style.setProperty('--y', rand(4, 94).toFixed(0) + '%'); el.style.setProperty('--o', '.35'); }
-      fx.appendChild(el);
+      el.className = 'fx-item fx-heart c' + (1 + (i % 3)) + (still ? ' is-static' : '');
+      el.style.cssText =
+        `--x:${fix(rand(0, 94), 1)}%;--size:${fix(rand(12, 28))}px;--dur:${fix(dur, 1)}s;--delay:${fix(-rand(0, dur), 1)}s;` +
+        `--drift:${fix(rand(-50, 70))}px;--rot:${fix(rand(-35, 35))}deg;--o:${still ? '.35' : fix(rand(.4, .8), 2)};--y:${fix(rand(4, 94))}%`;
+      frag.appendChild(el);
     }
 
-    for (let i = 0; i < sparkCount; i++) {
+    for (let i = 0; i < sparks; i++) {
+      const dur = rand(2.8, 5.4);
       const el = document.createElement('span');
-      const dur = rand(2.6, 5.2);
-      el.className = 'fx-item fx-spark c' + (1 + (i % 3));
-      el.style.setProperty('--x', rand(2, 96).toFixed(1) + '%');
-      el.style.setProperty('--y', rand(3, 94).toFixed(1) + '%');
-      el.style.setProperty('--size', rand(8, 20).toFixed(0) + 'px');
-      el.style.setProperty('--dur', dur.toFixed(1) + 's');
-      el.style.setProperty('--delay', (-rand(0, dur)).toFixed(1) + 's');
-      if (still) { el.classList.add('is-static'); el.style.setProperty('--o', '.4'); }
-      fx.appendChild(el);
+      el.className = 'fx-item fx-spark c' + (1 + (i % 3)) + (still ? ' is-static' : '');
+      el.style.cssText =
+        `--x:${fix(rand(2, 94), 1)}%;--y:${fix(rand(3, 92), 1)}%;--size:${fix(rand(8, 18))}px;--dur:${fix(dur, 1)}s;` +
+        `--delay:${fix(-rand(0, dur), 1)}s;--o:.4`;
+      frag.appendChild(el);
     }
+
+    fxLayer.appendChild(frag);                                      // one DOM insertion for everything
   }
+
+  // One shared listener removes finished bursts / rain hearts (instead of one listener per particle)
+  function cleanupParticle(e) {
+    const el = e.target;
+    if (el.classList && (el.classList.contains('burst-p') || el.classList.contains('rain-p'))) el.remove();
+  }
+  if (burstLayer) burstLayer.addEventListener('animationend', cleanupParticle);
+  if (fxLayer)    fxLayer.addEventListener('animationend', cleanupParticle);
 
   // A little puff of hearts & sparkles at a screen position
   function burst(x, y, count = 10) {
-    if (reduced()) return;
-    const layer = $('#burst');
-    if (!layer || layer.childElementCount > 90) return;
-    for (let i = 0; i < count; i++) {
-      const p = document.createElement('span');
+    if (reduced() || !burstLayer) return;
+    const n = lite() ? Math.max(3, Math.round(count * 0.6)) : count;
+    if (burstLayer.childElementCount > (lite() ? 36 : 70)) return;  // never pile up
+    const frag = document.createDocumentFragment();
+    for (let i = 0; i < n; i++) {
       const angle = rand(0, Math.PI * 2);
       const dist = rand(36, 96);
+      const p = document.createElement('span');
       p.className = 'burst-p ' + (i % 3 === 0 ? 'spark' : 'heart');
-      p.style.left = x + 'px';
-      p.style.top = y + 'px';
-      p.style.setProperty('--s', rand(9, 18).toFixed(0) + 'px');
-      p.style.setProperty('--dx', (Math.cos(angle) * dist).toFixed(0) + 'px');
-      p.style.setProperty('--dy', (Math.sin(angle) * dist - 28).toFixed(0) + 'px');
-      p.style.setProperty('--rot', rand(-60, 60).toFixed(0) + 'deg');
-      p.addEventListener('animationend', () => p.remove(), { once: true });
-      layer.appendChild(p);
+      p.style.cssText =
+        `left:${fix(x)}px;top:${fix(y)}px;--s:${fix(rand(9, 18))}px;--dx:${fix(Math.cos(angle) * dist)}px;` +
+        `--dy:${fix(Math.sin(angle) * dist - 28)}px;--rot:${fix(rand(-60, 60))}deg`;
+      frag.appendChild(p);
     }
+    burstLayer.appendChild(frag);
   }
 
   function burstFrom(el, count) {
@@ -127,30 +147,30 @@
     burst(r.left + r.width / 2, r.top + r.height / 2, count);
   }
 
-  // A gentle shower of hearts rising from the bottom (used on the final screen)
-  function rain(count = 18) {
-    if (reduced()) return;
-    const layer = $('#fx');                      // behind the card, so hearts never cover the words
-    if (!layer) return;
-    for (let i = 0; i < count; i++) {
+  // A gentle shower of hearts rising from the bottom (final screen). Sits behind the cards.
+  function rain(count = 14) {
+    if (reduced() || !fxLayer) return;
+    const n = lite() ? Math.round(count * 0.65) : count;
+    const frag = document.createDocumentFragment();
+    for (let i = 0; i < n; i++) {
       const p = document.createElement('span');
       p.className = 'rain-p';
-      p.style.setProperty('--x', rand(2, 96).toFixed(1) + '%');
-      p.style.setProperty('--s', rand(14, 30).toFixed(0) + 'px');
-      p.style.setProperty('--dur', rand(3.2, 5.6).toFixed(1) + 's');
-      p.style.setProperty('--drift', rand(-60, 60).toFixed(0) + 'px');
-      p.style.setProperty('--rot', rand(-40, 40).toFixed(0) + 'deg');
-      p.style.animationDelay = rand(0, 1.4).toFixed(2) + 's';
-      p.addEventListener('animationend', () => p.remove(), { once: true });
-      layer.appendChild(p);
+      p.style.cssText =
+        `--x:${fix(rand(2, 94), 1)}%;--s:${fix(rand(14, 28))}px;--dur:${fix(rand(3.2, 5.6), 1)}s;` +
+        `--drift:${fix(rand(-60, 60))}px;--rot:${fix(rand(-40, 40))}deg;animation-delay:${fix(rand(0, 1.4), 2)}s`;
+      frag.appendChild(p);
     }
+    fxLayer.appendChild(frag);
   }
 
-  // Tiny sparkle on every button press (pointer only; keyboard users just get the normal focus ring)
+  // Tiny sparkle when a main button is pressed. Added after the press has been painted,
+  // so the button itself always reacts first. (Choice buttons and the envelope burst on click.)
   document.addEventListener('pointerdown', (e) => {
-    const target = e.target.closest('.btn, .choice, .envelope');
-    if (target && !target.disabled) burst(e.clientX, e.clientY, 6);
-  });
+    const btn = e.target.closest && e.target.closest('.btn');
+    if (!btn || btn.disabled) return;
+    const x = e.clientX, y = e.clientY;
+    requestAnimationFrame(() => burst(x, y, 6));
+  }, { passive: true });
 
 
   /* ------------------------------------------------------------------
@@ -167,15 +187,15 @@
     const prev = current;
     current = next;
 
-    prev.classList.remove('is-active');
+    prev.classList.remove('is-active');                 // CSS pauses everything inside it
     prev.classList.add('is-leaving');
     await wait(t(600));
-    prev.hidden = true;
+    prev.hidden = true;                                 // fully removed from rendering
     prev.classList.remove('is-leaving');
 
     next.hidden = false;
     next.scrollTop = 0;
-    void next.offsetWidth;                       // force a reflow so the entrance animates
+    await nextFrame();                                  // let the browser lay it out, so the entrance animates
     next.classList.add('is-active');
 
     const focusTarget = $('[data-focus]', next);
@@ -195,16 +215,17 @@
   let unlocking = false;
 
   function setUnlockMessage(text) {
-    unlockMsg.textContent = text;
+    if (unlockMsg.textContent !== text) unlockMsg.textContent = text;
     unlockMsg.classList.toggle('show', Boolean(text));
   }
 
   function shakeCard() {
     if (reduced()) return;
-    unlockCard.classList.remove('shake');
-    void unlockCard.offsetWidth;
-    unlockCard.classList.add('shake');
+    unlockCard.classList.add('shake');                  // removed again when the animation ends (see below)
   }
+  unlockCard.addEventListener('animationend', (e) => {
+    if (e.target === unlockCard) unlockCard.classList.remove('shake');
+  });
 
   unlockForm.addEventListener('submit', (e) => {
     e.preventDefault();
@@ -225,26 +246,31 @@
     }
   });
 
-  nameInput.addEventListener('input', () => setUnlockMessage(''));
+  // Only touch the DOM when there is actually a message to clear
+  nameInput.addEventListener('input', () => {
+    if (unlockMsg.classList.contains('show')) setUnlockMessage('');
+  });
 
   async function runUnlock() {
     unlocking = true;
-    nameInput.blur();                            // closes the phone keyboard
+    nameInput.blur();                                   // closes the phone keyboard
 
     const overlay = $('#unlocking');
     const label = $('#unlock-label');
 
+    pausedByOverlay = true; syncPause();                // background decorations rest during the lock animation
     overlay.classList.add('show');
     await wait(t(300));
-    overlay.classList.add('progress');           // ring fills
+    overlay.classList.add('progress');                  // ring fills
     await wait(t(1650));
-    overlay.classList.add('opened');             // padlock opens
+    overlay.classList.add('opened');                    // padlock opens
     label.textContent = 'Unlocked ✨';
     burst(window.innerWidth / 2, window.innerHeight / 2, 18);
     await wait(t(1000));
 
     const moving = goTo('screen-welcome');
     overlay.classList.remove('show');
+    pausedByOverlay = false; syncPause();
     await moving;
     overlay.classList.remove('progress', 'opened');
   }
@@ -253,26 +279,23 @@
   /* ------------------------------------------------------------------
      6. SCREEN 2–3 — WELCOME + ENVELOPE
      ------------------------------------------------------------------ */
-  $('#open-surprise').addEventListener('click', () => goTo('screen-envelope'));
+  $('#open-surprise').addEventListener('click', () => goTo('screen-envelope'), { once: true });
 
   const envelope = $('#envelope');
   const envScene = $('#env-scene');
-  let envelopeOpened = false;
 
+  // {once:true}: the listener removes itself after the first tap, so double taps can't replay anything
   envelope.addEventListener('click', async () => {
-    if (envelopeOpened) return;
-    envelopeOpened = true;
-
     envelope.classList.add('open');
     envScene.classList.add('opened');
     envelope.setAttribute('aria-label', 'Envelope opened');
     burstFrom(envelope, 12);
 
-    await wait(t(2400));                         // flap opens, letter slides up
+    await wait(t(2400));                                // flap opens, letter slides up
     buildLetter();
     await goTo('screen-letter');
     revealLetter();
-  });
+  }, { once: true });
 
 
   /* ------------------------------------------------------------------
@@ -287,57 +310,57 @@
   function buildLetter() {
     if (letterBuilt) return;
     letterBuilt = true;
+    const frag = document.createDocumentFragment();
     LETTER.forEach((text, i) => {
       const p = document.createElement('p');
       p.textContent = text;
       p.style.setProperty('--i', i);
       if (i === 0) p.className = 'greeting';
       if (i === LETTER.length - 1) p.className = 'sign';
-      letterBody.appendChild(p);
+      frag.appendChild(p);
     });
+    letterBody.appendChild(frag);
   }
 
-  function revealLetter() {
+  async function revealLetter() {
     if (letterRevealed) return;
     letterRevealed = true;
-    letterBody.classList.add('show');            // paragraphs fade in one by one (CSS transition delays)
+    letterBody.classList.add('show');                   // paragraphs fade in one by one (CSS transition delays)
 
-    const total = reduced() ? 200 : 600 + LETTER.length * 600 + 1100;
-    setTimeout(() => {
-      ask.hidden = false;
-      void ask.offsetWidth;
-      ask.classList.add('show');
-    }, total);
+    await wait(reduced() ? 200 : 600 + LETTER.length * 600 + 1100);
+    ask.hidden = false;
+    await nextFrame();
+    ask.classList.add('show');
   }
 
-  const choiceButtons = $$('.choice');
-  const choicesBox    = $('#choices');
-  const reply         = $('#reply');
-  const replyWrap     = $('#reply-wrap');
-  const continueBtn   = $('#continue');
+  const choicesBox  = $('#choices');
+  const reply       = $('#reply');
+  const replyWrap   = $('#reply-wrap');
+  const continueBtn = $('#continue');
+  let chosen = null;
 
-  choiceButtons.forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const key = btn.dataset.choice;
+  // One listener for all three response buttons
+  choicesBox.addEventListener('click', (e) => {
+    const btn = e.target.closest('.choice');
+    if (!btn || btn.dataset.choice === chosen) return;  // same answer again: nothing to update
+    chosen = btn.dataset.choice;
 
-      choiceButtons.forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
-      choicesBox.classList.add('has-choice');
+    $$('.choice', choicesBox).forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+    choicesBox.classList.add('has-choice');
 
-      // Replace the reply (a new element re-plays its fade-in)
-      reply.textContent = '';
-      const p = document.createElement('p');
-      p.textContent = REPLIES[key];
-      reply.appendChild(p);
+    // Replace the reply (a fresh element re-plays its fade-in)
+    const p = document.createElement('p');
+    p.textContent = REPLIES[chosen];
+    reply.replaceChildren(p);
 
-      continueBtn.hidden = false;
-      burstFrom(btn, key === 'talk' ? 16 : 10);
-      replyWrap.scrollIntoView({ behavior: reduced() ? 'auto' : 'smooth', block: 'nearest' });
-    });
+    continueBtn.hidden = false;
+    burstFrom(btn, chosen === 'talk' ? 16 : 10);
+    replyWrap.scrollIntoView({ behavior: reduced() ? 'auto' : 'smooth', block: 'nearest' });
   });
 
   continueBtn.addEventListener('click', async () => {
     await goTo('screen-final');
-    rain(18);
+    rain(14);
   });
 
 
@@ -348,9 +371,31 @@
 
 
   /* ------------------------------------------------------------------
-     9. GENTLE MUSIC — generated locally with the Web Audio API.
-        Nothing plays (and no audio context exists) until the visitor
-        taps the toggle.
+     9. PAUSING DECORATIONS NOBODY CAN SEE
+        CSS already pauses animations on hidden screens. This adds the
+        hidden browser tab and the unlocking overlay.
+     ------------------------------------------------------------------ */
+  let pausedByTab = false;
+  let pausedByOverlay = false;
+
+  function syncPause() {
+    root.classList.toggle('fx-paused', pausedByTab || pausedByOverlay);
+  }
+
+  document.addEventListener('visibilitychange', () => {
+    pausedByTab = document.hidden;
+    syncPause();
+    Music.setHidden(document.hidden);
+  });
+
+  // If the visitor changes "reduce motion" while the page is open, rebuild the decorations to match
+  if (motionQuery.addEventListener) motionQuery.addEventListener('change', buildAmbient);
+
+
+  /* ------------------------------------------------------------------
+     10. GENTLE MUSIC — generated locally with the Web Audio API.
+         Nothing plays (and no audio context exists) until the visitor
+         taps the toggle.
      ------------------------------------------------------------------ */
   const Music = (() => {
     const AC = window.AudioContext || window.webkitAudioContext;
@@ -360,6 +405,8 @@
     // Soft pentatonic melody notes (C D E G A C)
     const SCALE = [72, 74, 76, 79, 81, 84];
     const CHORD_LEN = 8;
+    const LOOKAHEAD = 3.2;      // seconds of music scheduled ahead…
+    const TICK_MS = 1000;       // …so the scheduler only wakes once a second
 
     let ctx = null, master = null, bus = null, timer = null, playing = false;
     let nextChordAt = 0, nextNoteAt = 0, chordIndex = 0, noteIndex = 2;
@@ -436,7 +483,7 @@
     // Schedules a short window of music ahead of the audio clock
     function tick() {
       if (!ctx) return;
-      const horizon = ctx.currentTime + 1.6;
+      const horizon = ctx.currentTime + LOOKAHEAD;
       while (nextChordAt < horizon) {
         CHORDS[chordIndex % CHORDS.length].forEach((m) => pad(mtof(m), nextChordAt));
         chordIndex++;
@@ -449,6 +496,8 @@
       }
     }
 
+    function stopTimer() { clearInterval(timer); timer = null; }
+
     async function start() {
       if (!AC) return false;
       try {
@@ -458,9 +507,9 @@
         nextChordAt = now + 0.15;
         nextNoteAt = now + 1.4;
         chordIndex = 0;
-        clearInterval(timer);
+        stopTimer();
         tick();
-        timer = setInterval(tick, 400);
+        timer = setInterval(tick, TICK_MS);
         master.gain.cancelScheduledValues(now);
         master.gain.setValueAtTime(master.gain.value, now);
         master.gain.linearRampToValueAtTime(0.6, now + 1.6);   // gentle fade-in
@@ -474,31 +523,37 @@
     function stop() {
       if (!ctx) return;
       playing = false;
-      clearInterval(timer);
+      stopTimer();
       const c = ctx, m = master, now = c.currentTime;
       m.gain.cancelScheduledValues(now);
       m.gain.setValueAtTime(m.gain.value, now);
       m.gain.linearRampToValueAtTime(0, now + 0.6);            // gentle fade-out
       setTimeout(() => {
-        if (ctx === c && !playing) {
+        if (ctx === c && !playing) {                           // release the audio engine completely
           c.close().catch(() => {});
           ctx = master = bus = null;
         }
       }, 800);
     }
 
-    // Pause while the tab is hidden, resume when it comes back
-    document.addEventListener('visibilitychange', () => {
+    // Tab hidden: suspend the audio engine AND the scheduler timer. Tab visible again: pick up where it left off.
+    function setHidden(hidden) {
       if (!ctx) return;
-      if (document.hidden) ctx.suspend().catch(() => {});
-      else if (playing) ctx.resume().catch(() => {});
-    });
+      if (hidden) {
+        stopTimer();
+        ctx.suspend().catch(() => {});
+      } else if (playing) {
+        ctx.resume().catch(() => {});
+        if (!timer) timer = setInterval(tick, TICK_MS);
+      }
+    }
 
-    return { start, stop, isPlaying: () => playing, supported: Boolean(AC) };
+    return { start, stop, setHidden, isPlaying: () => playing, supported: Boolean(AC) };
   })();
 
   const musicBtn   = $('#music-toggle');
   const musicLabel = $('.music-label', musicBtn);
+  let musicBusy = false;
 
   function setMusicUI(on) {
     musicBtn.setAttribute('aria-pressed', String(on));
@@ -511,13 +566,15 @@
   }
 
   musicBtn.addEventListener('click', async () => {
+    if (musicBusy) return;                                     // ignore taps while the audio engine is starting
+    musicBusy = true;
     if (Music.isPlaying()) {
       Music.stop();
       setMusicUI(false);
     } else {
-      const ok = await Music.start();
-      setMusicUI(ok);
+      setMusicUI(await Music.start());
     }
+    musicBusy = false;
   });
 
 
