@@ -54,6 +54,26 @@ Open script.js. Everything you may want to edit is at the very top:
   REPLIES       the three replies to her choices
 Headings and button labels are in index.html.
 
+SMOOTHNESS ON PHONES (performance notes)
+----------------------------------------
+This version is tuned for Android Chrome. It looks the same, but does far less work:
+  * Fewer floating hearts and sparkles (6 + 7 on phones, 10 + 14 on desktop).
+  * Only "transform" and "opacity" are animated (the cheapest things a phone can animate).
+  * No live blur behind cards on phones/tablets/touch screens; shadows are simpler.
+    (Computers with a mouse keep the frosted-glass blur.)
+  * The pulsing button glow is a fading ring instead of an animated shadow.
+  * Animations stop automatically when their screen is hidden, when the browser tab is
+    in the background, and while the padlock animation plays. The music timer stops with the tab.
+  * Fonts load without blocking the page: it appears instantly, then the nicer fonts swap in.
+  * Tap bursts are added after the button has reacted, so taps feel immediate.
+
+UPDATING AN ALREADY-PUBLISHED SITE
+----------------------------------
+Replace index.html, style.css and script.js in your GitHub repository with the new files.
+The links inside index.html end in "?v=3". If you ever change style.css or script.js again,
+change that number (v=4, v=5 ...) in both places in index.html so phones fetch the new files
+instead of an old cached copy.
+
 GOOD TO KNOW
 ------------
 * The name check is a friendly gate, not a security lock. The letter is
@@ -65,8 +85,8 @@ GOOD TO KNOW
   (noindex), but it is not private.
 * There is no backend, so her choice is NOT sent to you or stored anywhere.
   She would have to tell you herself.
-* Fonts are the phone's or computer's own system fonts, so nothing is
-  downloaded and the look may vary slightly between devices.
+* Headings use Google Fonts (Playfair Display, Lora, Nunito). If a phone is offline or the
+  fonts are blocked, it falls back to the device's own fonts and everything still works.
 * Animations switch off or simplify automatically for people who have
   "reduce motion" enabled on their device.
 
