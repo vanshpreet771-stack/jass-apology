@@ -8,13 +8,19 @@
   <!-- Keeps this personal page out of search engines -->
   <meta name="robots" content="noindex, nofollow">
   <meta name="theme-color" content="#f6e9ff">
+  <!-- The design is light pastel; this stops Android Chrome's "auto dark mode" from re-colouring (and re-painting) the page -->
+  <meta name="color-scheme" content="light only">
   <!-- Tiny heart favicon embedded as a data URI (no extra file to host) -->
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Ctext y=%27.9em%27 font-size=%2790%27%3E%F0%9F%92%97%3C/text%3E%3C/svg%3E">
   <!-- Fonts: elegant serif for headings & letter, rounded sans for buttons. If the fonts can't load,
        the stack in style.css falls back to good system fonts. -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=Nunito:wght@600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,500&display=swap">
+  <!-- Loaded without blocking the first paint (media="print" trick): the page appears instantly with the
+       fallback fonts, then the nicer fonts swap in as soon as they arrive. Only the weights actually used are requested. -->
+  <link rel="stylesheet" media="print" onload="this.media='all'"
+        href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;1,400&family=Nunito:wght@600;700&family=Playfair+Display:ital,wght@0,600;1,500&display=swap">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;1,400&family=Nunito:wght@600;700&family=Playfair+Display:ital,wght@0,600;1,500&display=swap"></noscript>
 
   <!-- CRITICAL CSS (inlined on purpose).
        If style.css is ever slow, cached in an old version, or fails to load on a phone, this small block
@@ -47,8 +53,8 @@
   </style>
 
   <!-- ?v=2 makes phones download the newest files instead of an old cached copy -->
-  <link rel="stylesheet" href="style.css?v=2">
-  <script src="script.js?v=2" defer></script>
+  <link rel="stylesheet" href="style.css?v=3">
+  <script src="script.js?v=3" defer></script>
   <!-- If JavaScript is switched off, still show the first screen with a gentle note -->
   <noscript><style>.screen{opacity:1;visibility:visible;transform:none;pointer-events:auto}</style></noscript>
 </head>
@@ -76,7 +82,7 @@
       <div class="screen-inner">
         <div class="card" id="unlock-card">
           <div class="badge">
-            <span class="heart-glow"><span class="ico-heart beat" aria-hidden="true"></span></span>
+            <span class="heart-glow"><span class="ico-heart" aria-hidden="true"></span></span>
           </div>
           <h1 class="title" id="unlock-title" tabindex="-1">A little surprise is waiting for you <span class="emoji">💗</span></h1>
           <p class="subtitle">But first, tell me who you are...</p>
@@ -169,7 +175,7 @@
     <section class="screen" id="screen-final" hidden aria-labelledby="final-title">
       <div class="screen-inner">
         <div class="card final-card">
-          <span class="heart-glow big"><span class="ico-heart beat big" aria-hidden="true"></span></span>
+          <span class="heart-glow big"><span class="ico-heart" aria-hidden="true"></span></span>
           <h1 class="title final-title" id="final-title" tabindex="-1" data-focus>No matter what, I hope everything gets better between us. <span class="emoji">💗</span></h1>
           <button class="btn btn-ghost" id="reread" type="button">Read the letter again 💌</button>
         </div>
@@ -189,6 +195,9 @@
             <stop offset="1" stop-color="#9b78ee"/>
           </linearGradient>
         </defs>
+        <!-- soft purple glow drawn as a plain gradient (cheaper than a live drop-shadow filter) -->
+        <radialGradient id="lockGlow"><stop offset=".6" stop-color="#a98bf5" stop-opacity=".34"/><stop offset="1" stop-color="#a98bf5" stop-opacity="0"/></radialGradient>
+        <circle cx="60" cy="68" r="62" fill="url(#lockGlow)"/>
         <circle cx="60" cy="60" r="46" fill="#ffffff" fill-opacity=".6" stroke="#a98bf5" stroke-opacity=".18" stroke-width="6"/>
         <circle class="lock-ring" cx="60" cy="60" r="46" fill="none" stroke="url(#lockGrad)" stroke-width="6" stroke-linecap="round" transform="rotate(-90 60 60)"/>
         <path class="lock-shackle" d="M47 56 V47 a13 13 0 0 1 26 0 V56" fill="none" stroke="url(#lockGrad)" stroke-width="6" stroke-linecap="round"/>
